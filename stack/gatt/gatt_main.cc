@@ -34,6 +34,7 @@
 #include "gatt_int.h"
 #include "l2c_api.h"
 #include "osi/include/osi.h"
+#include "osi/include/properties.h"
 
 using base::StringPrintf;
 
@@ -176,10 +177,24 @@ void gatt_free(void) {
     gatt_cb.tcb[i].sr_cmd.multi_rsp_q = NULL;
   }
 
-  gatt_cb.hdl_list_info->clear();
-  gatt_cb.hdl_list_info = nullptr;
-  gatt_cb.srv_list_info->clear();
-  gatt_cb.srv_list_info = nullptr;
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  bool hdl_checked = true;
+  bool srv_checked = true;
+  if (!strcmp(prop_value, "1")) {
+    hdl_checked = gatt_cb.hdl_list_info != NULL;
+    srv_checked = gatt_cb.srv_list_info != NULL;
+  }
+
+  if (hdl_checked) {
+    gatt_cb.hdl_list_info->clear();
+    gatt_cb.hdl_list_info = nullptr;
+  }
+
+  if (srv_checked) {
+    gatt_cb.srv_list_info->clear();
+    gatt_cb.srv_list_info = nullptr;
+  }
 }
 
 /*******************************************************************************

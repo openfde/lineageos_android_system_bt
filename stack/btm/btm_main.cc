@@ -26,6 +26,7 @@
 #include "bt_target.h"
 #include "bt_types.h"
 #include "btm_int.h"
+#include "osi/include/properties.h"
 #include "stack_config.h"
 
 /* Global BTM control block structure
@@ -81,19 +82,25 @@ void btm_free(void) {
   fixed_queue_free(btm_cb.sec_pending_q, NULL);
   btm_cb.sec_pending_q = NULL;
 
-  list_node_t* end = list_end(btm_cb.sec_dev_rec);
-  list_node_t* node = list_begin(btm_cb.sec_dev_rec);
-  while (node != end) {
-    tBTM_SEC_DEV_REC* p_dev_rec = static_cast<tBTM_SEC_DEV_REC*>(list_node(node));
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  bool checked = true;
 
-    // we do list_remove in, must grab next before removing
-    node = list_next(node);
-    wipe_secrets_and_remove(p_dev_rec);
+  if (!strcmp(prop_value, "1")) {
+    checked = btm_cb.sec_dev_rec != NULL;
   }
-
-  list_free(btm_cb.sec_dev_rec);
-  btm_cb.sec_dev_rec = NULL;
-
+  if (checked) {
+    list_node_t* end = list_end(btm_cb.sec_dev_rec);
+    list_node_t* node = list_begin(btm_cb.sec_dev_rec);
+    while (node != end) {
+      tBTM_SEC_DEV_REC* p_dev_rec = static_cast<tBTM_SEC_DEV_REC*>(list_node(node));
+      // we do list_remove in, must grab next before removing
+      node = list_next(node);
+      wipe_secrets_and_remove(p_dev_rec);
+    }
+    list_free(btm_cb.sec_dev_rec);
+    btm_cb.sec_dev_rec = NULL;
+  }
   alarm_free(btm_cb.sec_collision_timer);
   btm_cb.sec_collision_timer = NULL;
 

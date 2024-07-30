@@ -21,6 +21,7 @@
 #include <thread>
 
 #include <base/strings/stringprintf.h>
+#include "osi/include/properties.h"
 
 namespace bluetooth {
 
@@ -159,7 +160,9 @@ bool MessageLoopThread::EnableRealTimeScheduling() {
                << kRealTimeFifoSchedulingPriority << " for linux_tid "
                << std::to_string(linux_tid_) << ", thread " << *this
                << ", error: " << strerror(errno);
-    return false;
+    char prop_value[16];
+    osi_property_get("fde.fake_bt", prop_value, "0");
+    return strcmp(prop_value, "1") == 0 ? true : false;
   }
   return true;
 }

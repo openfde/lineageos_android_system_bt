@@ -35,6 +35,7 @@
 #include "bta_dm_int.h"
 #include "bta_sys.h"
 #include "btm_api.h"
+#include "osi/include/properties.h"
 #include "stack/include/btu.h"
 
 static void bta_dm_pm_cback(tBTA_SYS_CONN_STATUS status, uint8_t id,
@@ -309,6 +310,14 @@ static void bta_dm_pm_stop_timer_by_index(tBTA_PM_TIMER* p_timer,
   std::unique_lock<std::recursive_mutex> state_lock(pm_timer_state_mutex);
   if (p_timer->srvc_id[timer_idx] == BTA_ID_MAX)
     return; /* The timer was not scheduled */
+
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (!strcmp(prop_value, "1")) {
+    if (!(p_timer->in_use && (p_timer->active > 0))) {
+      return;
+    }
+  }
 
   CHECK(p_timer->in_use && (p_timer->active > 0));
 

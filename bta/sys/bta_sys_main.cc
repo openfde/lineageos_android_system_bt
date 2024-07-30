@@ -38,6 +38,7 @@
 #include "osi/include/fixed_queue.h"
 #include "osi/include/log.h"
 #include "osi/include/osi.h"
+#include "osi/include/properties.h"
 #include "utl.h"
 
 #if (defined BTA_AR_INCLUDED) && (BTA_AR_INCLUDED == TRUE)
@@ -449,6 +450,13 @@ void bta_sys_hw_evt_stack_enabled(UNUSED_ATTR tBTA_SYS_HW_MSG* p_sys_hw_msg) {
 void bta_sys_event(BT_HDR* p_msg) {
   uint8_t id;
   bool freebuf = true;
+
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (!strcmp(prop_value, "1")) {
+    osi_free(p_msg);
+    return;
+  }
 
   APPL_TRACE_EVENT("%s: Event 0x%x", __func__, p_msg->event);
 

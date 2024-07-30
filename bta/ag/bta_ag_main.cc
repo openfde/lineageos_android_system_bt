@@ -29,6 +29,7 @@
 #include "bta_api.h"
 #include "bta_sys.h"
 #include "osi/include/osi.h"
+#include "osi/include/properties.h"
 #include "utl.h"
 
 /*****************************************************************************
@@ -729,6 +730,11 @@ void bta_ag_api_result(uint16_t handle, tBTA_AG_RES result,
  ******************************************************************************/
 void bta_ag_sm_execute(tBTA_AG_SCB* p_scb, uint16_t event,
                        const tBTA_AG_DATA& data) {
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (!strcmp(prop_value, "1")) {
+    return;
+  }
   tBTA_AG_ST_TBL state_table;
   uint8_t action;
   int i;

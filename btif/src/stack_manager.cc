@@ -30,6 +30,7 @@
 #include "device/include/controller.h"
 #include "osi/include/log.h"
 #include "osi/include/osi.h"
+#include "osi/include/properties.h"
 #include "osi/include/semaphore.h"
 
 // Temp includes
@@ -150,12 +151,15 @@ static void event_start_up_stack(UNUSED_ATTR void* context) {
   // Include this for now to put btif config into a shutdown-able state
   module_start_up(get_module(BTIF_CONFIG_MODULE));
   bte_main_enable();
-
-  if (future_await(local_hack_future) != FUTURE_SUCCESS) {
-    LOG_ERROR(LOG_TAG, "%s failed to start up the stack", __func__);
-    stack_is_running = true;  // So stack shutdown actually happens
-    event_shut_down_stack(nullptr);
-    return;
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (strcmp(prop_value, "1")) {
+    if (future_await(local_hack_future) != FUTURE_SUCCESS) {
+      LOG_ERROR(LOG_TAG, "%s failed to start up the stack", __func__);
+      stack_is_running = true;  // So stack shutdown actually happens
+      event_shut_down_stack(nullptr);
+      return;
+    }
   }
 
   stack_is_running = true;
@@ -177,6 +181,12 @@ static void event_shut_down_stack(UNUSED_ATTR void* context) {
 
   btif_disable_bluetooth();
   module_shut_down(get_module(BTIF_CONFIG_MODULE));
+
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (!strcmp(prop_value, "1")) {
+    future_ready(local_hack_future, FUTURE_SUCCESS);
+  }
 
   future_await(local_hack_future);
   module_shut_down(get_module(CONTROLLER_MODULE));  // Doesn't do any work, just

@@ -31,6 +31,7 @@
 #include "main/shim/controller.h"
 #include "main/shim/shim.h"
 #include "osi/include/future.h"
+#include "osi/include/properties.h"
 #include "stack/include/btm_ble_api.h"
 
 const bt_event_mask_t BLE_EVENT_MASK = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
@@ -603,6 +604,12 @@ const controller_t* bluetooth::legacy::controller_get_interface() {
 }
 
 const controller_t* controller_get_interface() {
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (!strcmp(prop_value, "1")) {
+    readable = true;
+  }
+
   if (bluetooth::shim::is_gd_shim_enabled()) {
     return bluetooth::shim::controller_get_interface();
   } else {

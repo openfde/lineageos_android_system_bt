@@ -43,6 +43,7 @@
 #include "osi/include/list.h"
 #include "osi/include/log.h"
 #include "osi/include/osi.h"
+#include "osi/include/properties.h"
 #include "osi/include/semaphore.h"
 #include "osi/include/thread.h"
 #include "osi/include/wakelock.h"
@@ -225,6 +226,14 @@ void alarm_set_on_mloop(alarm_t* alarm, uint64_t interval_ms,
 static void alarm_set_internal(alarm_t* alarm, uint64_t period_ms,
                                alarm_callback_t cb, void* data,
                                fixed_queue_t* queue, bool for_msg_loop) {
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (!strcmp(prop_value, "1")) {
+    if (alarms == NULL || alarm == NULL || cb == NULL) {
+      return;
+    }
+  }
+
   CHECK(alarms != NULL);
   CHECK(alarm != NULL);
   CHECK(cb != NULL);

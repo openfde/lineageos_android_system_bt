@@ -386,7 +386,11 @@ static void startup_timer_expired(UNUSED_ATTR void* context) {
     return;
   }
 
-  abort();
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (strcmp(prop_value, "1")) {
+    abort();
+  }
 }
 
 // Command/packet transmitting functions
@@ -473,7 +477,11 @@ static void hci_timeout_abort(void) {
 
   // We shouldn't try to recover the stack from this command timeout.
   // If it's caused by a software bug, fix it. If it's a hardware bug, fix it.
-  abort();
+  char prop_value[16];
+  osi_property_get("fde.fake_bt", prop_value, "0");
+  if (strcmp(prop_value, "1")) {
+    abort();
+  }
 }
 
 static void hci_root_inflamed_abort() {
